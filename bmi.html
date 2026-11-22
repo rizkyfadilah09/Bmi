@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kalkulator BMI & Komposisi Tubuh Ideal</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#ECFDF5',
+              100: '#D1FAE5',
+              500: '#10B981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065F46',
+              900: '#064E3B'
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #F8FAFC;
+      color: #0F172A;
+    }
+    .metric-number {
+      font-feature-settings: "tnum" 1, "cv05" 1;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      border-radius: 999px;
+      background: #E2E8F0;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #047857;
+      border: 3px solid #FFFFFF;
+      box-shadow: 0 3px 8px rgba(15, 23, 42, 0.15);
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      background: #065F46;
+    }
+    .gauge-needle-smooth {
+      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      transform-origin: 140px 130px;
+    }
+    .marker-indicator {
+      transition: left 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+  </style>
+</head>
+<body class="min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+
+  <div class="max-w-6xl mx-auto space-y-8">
+
+    <!-- Header Bersih & Terstruktur -->
+    <header class="border-b border-slate-200/80 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div class="space-y-1.5">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-semibold">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          Klinis & Nutrisi Terpadu (WHO & Standar Asia-Pasifik)
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+          Kalkulator Indeks Massa & Berat Ideal
+        </h1>
+        <p class="text-sm text-slate-500 max-w-2xl leading-relaxed">
+          Kalkulasi presisi komposisi fisik, estimasi kebutuhan kalori basal (Mifflin-St Jeor), serta strategi nutrisi dan pemulihan tubuh harian.
+        </p>
+      </div>
+
+      <button id="btn-reset" type="button" class="self-start md:self-end text-xs font-semibold text-slate-600 bg-white border border-slate-300 hover:border-slate-400 hover:bg-slate-50 px-4 py-2 rounded-xl transition shadow-sm">
+        Kembalikan ke Default
+      </button>
+    </header>
+
+    <!-- Grid Utama: Form Input Parameter (Kiri) + Visualisasi & Kalkulasi (Kanan) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+      <!-- Kolom Kiri: Form Interaktif -->
+      <section class="lg:col-span-5 bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-sm space-y-6">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900">Parameter Tubuh</h2>
+          <p class="text-xs text-slate-500">Sesuaikan slider atau ketikkan angka langsung.</p>
+        </div>
+
+        <!-- 1. Pemilihan Gender -->
+        <div class="space-y-2">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Jenis Kelamin</label>
+          <div class="grid grid-cols-2 gap-3">
+            <button id="btn-male" type="button" class="gender-btn flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl border-2 border-brand-600 bg-emerald-50/60 text-brand-800 font-semibold text-sm transition-all shadow-sm">
+              <svg class="w-5 h-5 text-brand-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="10" cy="14" r="5"></circle>
+                <path d="M19 5l-5.4 5.4M15 5h4v4"></path>
+              </svg>
+              <span>Pria</span>
+            </button>
+            <button id="btn-female" type="button" class="gender-btn flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl border-2 border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-semibold text-sm transition-all">
+              <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="9" r="5"></circle>
+                <path d="M12 14v7M9 18h6"></path>
+              </svg>
+              <span>Wanita</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Usia -->
+        <div class="space-y-3 bg-slate-50/80 p-4 rounded-2xl border border-slate-200/60">
+          <div class="flex items-center justify-between">
+            <label for="input-age" class="text-xs font-bold uppercase tracking-wider text-slate-600">Usia</label>
+            <div class="flex items-center gap-1.5">
+              <input id="input-age" type="number" min="10" max="95" value="26" class="metric-number w-16 text-right font-bold text-lg text-slate-900 bg-white px-2 py-1 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500" />
+              <span class="text-xs text-slate-500 font-medium">tahun</span>
+            </div>
+          </div>
+          <input id="slider-age" type="range" min="10" max="95" value="26" class="w-full accent-emerald-600" />
+          <div class="flex justify-between text-[11px] font-mono text-slate-400">
+            <span>10 thn</span>
+            <span>50 thn</span>
+            <span>95 thn</span>
+          </div>
+        </div>
+
+        <!-- 3. Tinggi Badan -->
+        <div class="space-y-3 bg-slate-50/80 p-4 rounded-2xl border border-slate-200/60">
+          <div class="flex items-center justify-between">
+            <label for="input-height" class="text-xs font-bold uppercase tracking-wider text-slate-600">Tinggi Badan</label>
+            <div class="flex items-center gap-1.5">
+              <input id="input-height" type="number" min="120" max="220" value="172" class="metric-number w-20 text-right font-bold text-lg text-slate-900 bg-white px-2 py-1 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500" />
+              <span class="text-xs text-slate-500 font-medium">cm</span>
+            </div>
+          </div>
+          <input id="slider-height" type="range" min="120" max="220" value="172" class="w-full accent-emerald-600" />
+          <div class="flex justify-between text-[11px] font-mono text-slate-400">
+            <span>120 cm</span>
+            <span>170 cm</span>
+            <span>220 cm</span>
+          </div>
+        </div>
+
+        <!-- 4. Berat Badan -->
+        <div class="space-y-3 bg-slate-50/80 p-4 rounded-2xl border border-slate-200/60">
+          <div class="flex items-center justify-between">
+            <label for="input-weight" class="text-xs font-bold uppercase tracking-wider text-slate-600">Berat Badan</label>
+            <div class="flex items-center gap-1.5">
+              <input id="input-weight" type="number" min="30" max="180" step="0.5" value="68" class="metric-number w-20 text-right font-bold text-lg text-slate-900 bg-white px-2 py-1 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500" />
+              <span class="text-xs text-slate-500 font-medium">kg</span>
+            </div>
+          </div>
+          <input id="slider-weight" type="range" min="30" max="180" step="0.5" value="68" class="w-full accent-emerald-600" />
+          <div class="flex justify-between text-[11px] font-mono text-slate-400">
+            <span>30 kg</span>
+            <span>100 kg</span>
+            <span>180 kg</span>
+          </div>
+        </div>
+
+        <!-- Tingkat Aktivitas Harian -->
+        <div class="space-y-2">
+          <label for="activity-level" class="block text-xs font-bold uppercase tracking-wider text-slate-600">Tingkat Aktivitas Fisik</label>
+          <select id="activity-level" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500">
+            <option value="1.2">Ringan Sekali (Sedentari / banyak duduk)</option>
+            <option value="1.375" selected>Ringan (Olahraga santai 1-3 hari/minggu)</option>
+            <option value="1.55">Moderat (Latihan intensitas sedang 3-5 hari/minggu)</option>
+            <option value="1.725">Sangat Aktif (Latihan berat 6-7 hari/minggu)</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- Kolom Kanan: Hasil & Gauge Spektrum Visual -->
+      <section class="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-sm space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-slate-100">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Hasil Kalkulasi</span>
+            <h2 class="text-xl font-extrabold text-slate-900">Analisis Komposisi & BMI</h2>
+          </div>
+          <span id="status-badge" class="px-4 py-1.5 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            Berat Badan Ideal
+          </span>
+        </div>
+
+        <!-- Meter Gauge & Nilai Utama -->
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center bg-slate-50/80 p-5 rounded-2xl border border-slate-200/60">
+          <!-- Gauge SVG -->
+          <div class="sm:col-span-6 flex flex-col items-center justify-center">
+            <svg viewBox="0 0 280 155" class="w-56 h-auto overflow-visible">
+              <!-- Zona Gauge: Underweight (<18.5), Normal (18.5-24.9), Overweight (25-29.9), Obese (>=30) -->
+              <path d="M 40 130 A 100 100 0 0 1 72 57" fill="none" stroke="#0284C7" stroke-width="16" stroke-linecap="round" />
+              <path d="M 75 53 A 100 100 0 0 1 158 31" fill="none" stroke="#059669" stroke-width="16" />
+              <path d="M 163 32 A 100 100 0 0 1 214 62" fill="none" stroke="#D97706" stroke-width="16" />
+              <path d="M 217 66 A 100 100 0 0 1 240 130" fill="none" stroke="#E11D48" stroke-width="16" stroke-linecap="round" />
+
+              <!-- Jarum Penunjuk -->
+              <g id="gauge-needle" class="gauge-needle-smooth" style="transform: rotate(0deg);">
+                <line x1="140" y1="130" x2="140" y2="44" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" />
+                <circle cx="140" cy="130" r="7" fill="#0F172A" />
+                <circle cx="140" cy="130" r="3" fill="#FFFFFF" />
+              </g>
+            </svg>
+            <div class="text-center mt-1">
+              <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Skor Indeks Anda</div>
+              <div id="bmi-score-display" class="metric-number font-extrabold text-4xl text-slate-900">22.98</div>
+            </div>
+          </div>
+
+          <!-- Target Berat & Estimasi Kalori -->
+          <div class="sm:col-span-6 space-y-3.5">
+            <div class="bg-white p-4 rounded-2xl border border-slate-200">
+              <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Target Berat Ideal (Rumus Broca)</div>
+              <div class="flex items-baseline gap-2 mt-1">
+                <span id="ideal-weight-exact" class="metric-number text-2xl font-extrabold text-brand-700">64.8 kg</span>
+                <span id="ideal-weight-range" class="text-xs text-slate-500 font-medium">(Rentang: 54.7 – 73.9 kg)</span>
+              </div>
+              <p id="weight-diff-text" class="text-xs font-semibold text-emerald-600 mt-1">
+                Berat badan Anda tergolong normal dan stabil.
+              </p>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-slate-200">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Kebutuhan Energi (TDEE)</span>
+                <span id="calorie-mode-tag" class="font-bold text-xs px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700">Maintenance</span>
+              </div>
+              <div class="mt-1">
+                <span id="target-calories" class="metric-number text-2xl font-extrabold text-slate-900">2.280</span>
+                <span class="text-xs font-semibold text-slate-500"> kkal / hari</span>
+              </div>
+              <p id="macro-summary" class="text-[11px] text-slate-500 mt-1 font-mono">
+                P: 114g (20%) • K: 285g (50%) • L: 76g (30%)
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Garis Spektrum BMI -->
+        <div class="space-y-2 pt-2">
+          <div class="flex justify-between text-[11px] font-semibold text-slate-500 px-1">
+            <span>&lt; 18.5 (Kurus)</span>
+            <span>18.5–24.9 (Normal)</span>
+            <span>25.0–29.9 (Kelebihan)</span>
+            <span>&ge; 30 (Obesitas)</span>
+          </div>
+          <div class="relative h-2.5 w-full rounded-full bg-slate-100 overflow-hidden flex">
+            <div class="w-[20%] bg-sky-500"></div>
+            <div class="w-[30%] bg-emerald-500"></div>
+            <div class="w-[25%] bg-amber-500"></div>
+            <div class="w-[25%] bg-rose-500"></div>
+          </div>
+          <div class="relative h-3">
+            <div id="spectrum-marker" class="marker-indicator absolute -top-4 w-4 h-4 rounded-full bg-slate-900 border-2 border-white shadow-md" style="left: 36%;"></div>
+          </div>
+        </div>
+
+        <!-- Banner Program Spesifik -->
+        <div id="program-banner" class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-start gap-3.5">
+          <div id="program-icon" class="w-9 h-9 rounded-xl bg-white border border-emerald-200 text-emerald-700 flex items-center justify-center shrink-0 text-base font-bold">
+            ✓
+          </div>
+          <div class="space-y-0.5">
+            <h3 id="program-title" class="font-bold text-sm text-slate-900">
+              Fokus: Pemeliharaan Komposisi Seimbang (Maintenance)
+            </h3>
+            <p id="program-desc" class="text-xs text-slate-600 leading-relaxed">
+              Jaga asupan harian di angka pemeliharaan. Utamakan protein cukup untuk regenerasi otot dan padukan kardio dengan latihan beban progresif.
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Bagian Bawah: Panduan Gaya Hidup Personal -->
+    <section class="space-y-4 pt-4 border-t border-slate-200/80">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">Protokol Kebiasaan Sehari-hari</h2>
+          <p id="rec-subtitle" class="text-xs text-slate-500">
+            Disesuaikan khusus untuk profil tubuh Anda saat ini.
+          </p>
+        </div>
+
+        <!-- Tab Filter Kategori -->
+        <div class="inline-flex bg-slate-100 p-1 rounded-2xl border border-slate-200/60 self-start">
+          <button type="button" data-tab="all" class="rec-tab px-3.5 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-900 shadow-sm transition">
+            Semua
+          </button>
+          <button type="button" data-tab="food" class="rec-tab px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 transition">
+            Pola Makan
+          </button>
+          <button type="button" data-tab="workout" class="rec-tab px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 transition">
+            Latihan Fisik
+          </button>
+          <button type="button" data-tab="sleep" class="rec-tab px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 transition">
+            Tidur & Recovery
+          </button>
+        </div>
+      </div>
+
+      <!-- 3 Kartu Panduan Fungsional -->
+      <div id="cards-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- Kartu 1: Nutrisi & Makanan -->
+        <article data-card="food" class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between space-y-4">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Nutrisi Harian</span>
+              <span id="food-badge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
+                Seimbang
+              </span>
+            </div>
+            <h3 class="text-base font-bold text-slate-900">Strategi Piring Makan</h3>
+            <p id="food-intro" class="text-xs text-slate-600 leading-relaxed"></p>
+            <ul id="food-list" class="space-y-2 text-xs text-slate-600"></ul>
+          </div>
+          <div id="food-tip" class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600"></div>
+        </article>
+
+        <!-- Kartu 2: Latihan Fisik -->
+        <article data-card="workout" class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between space-y-4">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Aktivitas & Otot</span>
+              <span id="workout-badge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-sky-50 text-sky-800 border border-sky-200">
+                3–4x Seminggu
+              </span>
+            </div>
+            <h3 class="text-base font-bold text-slate-900">Regimen Olahraga</h3>
+            <p id="workout-intro" class="text-xs text-slate-600 leading-relaxed"></p>
+            <ul id="workout-list" class="space-y-2 text-xs text-slate-600"></ul>
+          </div>
+          <div id="workout-tip" class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600"></div>
+        </article>
+
+        <!-- Kartu 3: Tidur & Pemulihan -->
+        <article data-card="sleep" class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between space-y-4">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Regenerasi Sel</span>
+              <span id="sleep-badge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-800 border border-indigo-200">
+                7–8 Jam Rutin
+              </span>
+            </div>
+            <h3 class="text-base font-bold text-slate-900">Ritme Sirkadian & Istirahat</h3>
+            <p id="sleep-intro" class="text-xs text-slate-600 leading-relaxed"></p>
+            <ul id="sleep-list" class="space-y-2 text-xs text-slate-600"></ul>
+          </div>
+          <div id="sleep-tip" class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600"></div>
+        </article>
+
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Script Logika Medis & Interaktivitas UI -->
+  <script>
+    const state = {
+      gender: 'male',
+      age: 26,
+      height: 172,
+      weight: 68,
+      activity: 1.375
+    };
+
+    // Elemen DOM
+    const btnMale = document.getElementById('btn-male');
+    const btnFemale = document.getElementById('btn-female');
+    const inputAge = document.getElementById('input-age');
+    const sliderAge = document.getElementById('slider-age');
+    const inputHeight = document.getElementById('input-height');
+    const sliderHeight = document.getElementById('slider-height');
+    const inputWeight = document.getElementById('input-weight');
+    const sliderWeight = document.getElementById('slider-weight');
+    const selectActivity = document.getElementById('activity-level');
+    const btnReset = document.getElementById('btn-reset');
+
+    const statusBadge = document.getElementById('status-badge');
+    const needle = document.getElementById('gauge-needle');
+    const bmiScoreDisplay = document.getElementById('bmi-score-display');
+    const idealWeightExact = document.getElementById('ideal-weight-exact');
+    const idealWeightRange = document.getElementById('ideal-weight-range');
+    const weightDiffText = document.getElementById('weight-diff-text');
+    const calorieModeTag = document.getElementById('calorie-mode-tag');
+    const targetCalories = document.getElementById('target-calories');
+    const macroSummary = document.getElementById('macro-summary');
+    const spectrumMarker = document.getElementById('spectrum-marker');
+
+    const programBanner = document.getElementById('program-banner');
+    const programIcon = document.getElementById('program-icon');
+    const programTitle = document.getElementById('program-title');
+    const programDesc = document.getElementById('program-desc');
+    const recSubtitle = document.getElementById('rec-subtitle');
+
+    // Tab Button Handlers
+    const tabButtons = document.querySelectorAll('.rec-tab');
+    const cards = document.querySelectorAll('#cards-container > article');
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabButtons.forEach(b => {
+          b.classList.remove('bg-white', 'text-slate-900', 'shadow-sm');
+          b.classList.add('text-slate-600');
+        });
+        btn.classList.add('bg-white', 'text-slate-900', 'shadow-sm');
+        btn.classList.remove('text-slate-600');
+
+        const tab = btn.dataset.tab;
+        cards.forEach(card => {
+          if (tab === 'all' || card.dataset.card === tab) {
+            card.classList.remove('hidden');
+          } else {
+            card.classList.add('hidden');
+          }
+        });
+      });
+    });
+
+    // Sinkronisasi Input dan Slider
+    function linkInputAndSlider(inputEl, sliderEl, key) {
+      inputEl.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value) || 0;
+        state[key] = val;
+        sliderEl.value = val;
+        recalculate();
+      });
+      sliderEl.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        state[key] = val;
+        inputEl.value = val;
+        recalculate();
+      });
+    }
+
+    linkInputAndSlider(inputAge, sliderAge, 'age');
+    linkInputAndSlider(inputHeight, sliderHeight, 'height');
+    linkInputAndSlider(inputWeight, sliderWeight, 'weight');
+
+    selectActivity.addEventListener('change', (e) => {
+      state.activity = parseFloat(e.target.value);
+      recalculate();
+    });
+
+    btnMale.addEventListener('click', () => {
+      state.gender = 'male';
+      updateGenderUI();
+      recalculate();
+    });
+
+    btnFemale.addEventListener('click', () => {
+      state.gender = 'female';
+      updateGenderUI();
+      recalculate();
+    });
+
+    btnReset.addEventListener('click', () => {
+      state.gender = 'male';
+      state.age = 26;
+      state.height = 172;
+      state.weight = 68;
+      state.activity = 1.375;
+
+      inputAge.value = 26;
+      sliderAge.value = 26;
+      inputHeight.value = 172;
+      sliderHeight.value = 172;
+      inputWeight.value = 68;
+      sliderWeight.value = 68;
+      selectActivity.value = "1.375";
+
+      updateGenderUI();
+      recalculate();
+    });
+
+    function updateGenderUI() {
+      if (state.gender === 'male') {
+        btnMale.className = "gender-btn flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl border-2 border-brand-600 bg-emerald-50/60 text-brand-800 font-semibold text-sm transition-all shadow-sm";
+        btnFemale.className = "gender-btn flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl border-2 border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-semibold text-sm transition-all";
+      } else {
+        btnFemale.className = "gender-btn flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl border-2 border-brand-600 bg-emerald-50/60 text-brand-800 font-semibold text-sm transition-all shadow-sm";
+        btnMale.className = "gender-btn flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl border-2 border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-semibold text-sm transition-all";
+      }
+    }
+
+    function recalculate() {
+      const hM = state.height / 100;
+      const bmi = state.weight / (hM * hM);
+      const bmiRounded = bmi.toFixed(1);
+      bmiScoreDisplay.innerText = bmiRounded;
+
+      // Formula Broca modifikasi untuk berat ideal
+      let idealWeight = 0;
+      if (state.gender === 'male') {
+        idealWeight = (state.height - 100) - ((state.height - 100) * 0.10);
+      } else {
+        idealWeight = (state.height - 100) - ((state.height - 100) * 0.15);
+      }
+      if (idealWeight < 20) idealWeight = 20;
+
+      const minNormalWeight = (18.5 * (hM * hM)).toFixed(1);
+      const maxNormalWeight = (24.9 * (hM * hM)).toFixed(1);
+
+      idealWeightExact.innerText = `${idealWeight.toFixed(1)} kg`;
+      idealWeightRange.innerText = `(Rentang: ${minNormalWeight} – ${maxNormalWeight} kg)`;
+
+      // Selisih berat
+      const diff = state.weight - idealWeight;
+      if (Math.abs(diff) <= 1.5) {
+        weightDiffText.innerText = "Berat badan Anda berada tepat di kisaran ideal.";
+        weightDiffText.className = "text-xs font-semibold text-emerald-600 mt-1";
+      } else if (diff < -1.5) {
+        weightDiffText.innerText = `Disarankan menaikkan sekitar ${Math.abs(diff).toFixed(1)} kg untuk proporsi optimal.`;
+        weightDiffText.className = "text-xs font-semibold text-sky-600 mt-1";
+      } else {
+        weightDiffText.innerText = `Disarankan menurunkan sekitar ${diff.toFixed(1)} kg untuk batas proporsi sehat.`;
+        weightDiffText.className = "text-xs font-semibold text-amber-600 mt-1";
+      }
+
+      // Rumus BMR (Mifflin-St Jeor)
+      let bmr = (10 * state.weight) + (6.25 * state.height) - (5 * state.age);
+      bmr += (state.gender === 'male') ? 5 : -161;
+
+      const tdee = Math.round(bmr * state.activity);
+
+      // Kategori BMI & Sudut Gauge (-90 deg s.d +90 deg)
+      let angle = -90;
+      let markerPos = 0;
+      let category = "";
+
+      if (bmi < 18.5) {
+        category = "underweight";
+        // Map 12 -> 18.5 ke -90 -> -45
+        const norm = Math.max(0, Math.min(1, (bmi - 12) / 6.5));
+        angle = -90 + (norm * 45);
+        markerPos = norm * 20;
+      } else if (bmi <= 24.9) {
+        category = "normal";
+        // Map 18.5 -> 24.9 ke -45 -> 10
+        const norm = (bmi - 18.5) / 6.4;
+        angle = -45 + (norm * 55);
+        markerPos = 20 + (norm * 30);
+      } else if (bmi <= 29.9) {
+        category = "overweight";
+        // Map 25 -> 29.9 ke 10 -> 55
+        const norm = (bmi - 25) / 4.9;
+        angle = 10 + (norm * 45);
+        markerPos = 50 + (norm * 25);
+      } else {
+        category = "obese";
+        // Map 30 -> 40 ke 55 -> 90
+        const norm = Math.max(0, Math.min(1, (bmi - 30) / 10));
+        angle = 55 + (norm * 35);
+        markerPos = 75 + (norm * 23);
+      }
+
+      needle.style.transform = `rotate(${angle}deg)`;
+      spectrumMarker.style.left = `calc(${markerPos}% - 8px)`;
+
+      // Perbarui UI Kategori, Badge, dan Banner Kalori
+      updateCategoryUI(category, tdee);
+    }
+
+    function updateCategoryUI(cat, tdee) {
+      recSubtitle.innerText = `Disesuaikan khusus untuk ${state.gender === 'male' ? 'Pria' : 'Wanita'}, ${state.age} tahun (Kategori: ${cat.toUpperCase()})`;
+
+      const foodIntro = document.getElementById('food-intro');
+      const foodList = document.getElementById('food-list');
+      const foodTip = document.getElementById('food-tip');
+      const foodBadge = document.getElementById('food-badge');
+
+      const workoutIntro = document.getElementById('workout-intro');
+      const workoutList = document.getElementById('workout-list');
+      const workoutTip = document.getElementById('workout-tip');
+      const workoutBadge = document.getElementById('workout-badge');
+
+      const sleepIntro = document.getElementById('sleep-intro');
+      const sleepList = document.getElementById('sleep-list');
+      const sleepTip = document.getElementById('sleep-tip');
+      const sleepBadge = document.getElementById('sleep-badge');
+
+      if (cat === 'underweight') {
+        statusBadge.className = "px-4 py-1.5 rounded-full text-xs font-extrabold bg-sky-50 text-sky-800 border border-sky-200";
+        statusBadge.innerText = "Berat Badan Kurang";
+
+        calorieModeTag.innerText = "Surplus Kalori (+350)";
+        calorieModeTag.className = "font-bold text-xs px-2 py-0.5 rounded-md bg-sky-50 text-sky-800";
+        const targetCal = tdee + 350;
+        targetCalories.innerText = targetCal.toLocaleString('id-ID');
+        macroSummary.innerText = `P: ${Math.round(state.weight * 1.8)}g • K: ${Math.round((targetCal * 0.5) / 4)}g • L: ${Math.round((targetCal * 0.25) / 9)}g`;
+
+        programBanner.className = "p-4 rounded-2xl bg-sky-50 border border-sky-200 flex items-start gap-3.5";
+        programIcon.innerText = "▲";
+        programIcon.className = "w-9 h-9 rounded-xl bg-white border border-sky-200 text-sky-700 flex items-center justify-center shrink-0 text-base font-bold";
+        programTitle.innerText = "Fokus Program: Penambahan Massa Otot (Lean Bulking)";
+        programDesc.innerText = "Konsumsi kalori lebih tinggi dengan densitas nutrisi berkualitas tinggi untuk memicu pembentukan jaringan otot tanpa lemak jenuh berlebih.";
+
+        foodBadge.innerText = "Surplus Bergizi";
+        foodIntro.innerText = "Fokus pada makanan padat kalori tanpa membuat perut kembung atau memicu radang lambung.";
+        foodList.innerHTML = `
+          <li>• Tambahkan lemak sehat seperti alpukat, selai kacang murni, dan minyak zaitun pada menu harian.</li>
+          <li>• Konsumsi sumber protein 1.6–2.0g per kg berat badan (telur, dada ayam, tempe/tahu, ikan).</li>
+          <li>• Minum smoothie susu/oat di sela waktu makan utama untuk asupan kalori bersih tambahan.</li>
+        `;
+        foodTip.innerHTML = "<strong>Saran Praktis:</strong> Jangan lewatkan sarapan dan hindari minum air putih berlebih persis sebelum makan utama agar nafsu makan tidak turun.";
+
+        workoutBadge.innerText = "Hipertrofi 3–4x";
+        workoutIntro.innerText = "Prioritaskan latihan beban untuk merangsang sintesis protein dan pertumbuhan massa otot.";
+        workoutList.innerHTML = `
+          <li>• Latihan compound: Squat, Dumbbell Bench Press, Roman Deadlift, dan Lat Pulldown (8–12 repetisi).</li>
+          <li>• Batasi kardio intensitas tinggi agar kalori tubuh tidak terbuang sia-sia.</li>
+          <li>• Istirahat 90–120 detik antarsesi angkatan untuk memulihkan cadangan ATP otot.</li>
+        `;
+        workoutTip.innerHTML = "<strong>Progres Beban:</strong> Catat beban angkatan setiap minggu dan tingkatkan beban bertahap secara aman.";
+
+      } else if (cat === 'normal') {
+        statusBadge.className = "px-4 py-1.5 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200";
+        statusBadge.innerText = "Berat Badan Ideal";
+
+        calorieModeTag.innerText = "Maintenance Nutrisi";
+        calorieModeTag.className = "font-bold text-xs px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800";
+        targetCalories.innerText = tdee.toLocaleString('id-ID');
+        macroSummary.innerText = `P: ${Math.round(state.weight * 1.5)}g • K: ${Math.round((tdee * 0.5) / 4)}g • L: ${Math.round((tdee * 0.25) / 9)}g`;
+
+        programBanner.className = "p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-start gap-3.5";
+        programIcon.innerText = "✓";
+        programIcon.className = "w-9 h-9 rounded-xl bg-white border border-emerald-200 text-emerald-700 flex items-center justify-center shrink-0 text-base font-bold";
+        programTitle.innerText = "Fokus: Pemeliharaan Komposisi Seimbang (Body Recomposition)";
+        programDesc.innerText = "Pertahankan asupan kalori seimbang dan variasikan jenis latihan untuk mengoptimalkan kebugaran jantung serta kekuatan fungsional sendi.";
+
+        foodBadge.innerText = "Gizi Seimbang";
+        foodIntro.innerText = "Jaga keberagaman mikronutrien dan pertahankan komposisi piring seimbang.";
+        foodList.innerHTML = `
+          <li>• Format piring 1/2 sayur & buah, 1/4 sumber protein tanpa lemak, dan 1/4 karbohidrat kompleks.</li>
+          <li>• Penuhi hidrasi 30–35 ml air per kilogram berat badan setiap hari.</li>
+          <li>• Kendalikan asupan gula tambahan di bawah 25 gram sehari untuk menjaga kestabilan insulin.</li>
+        `;
+        foodTip.innerHTML = "<strong>Kunci Sukses:</strong> Konsistensi lebih penting daripada diet ekstrem. Nikmati pola makan fleksibel berbasis bahan alami (whole foods).";
+
+        workoutBadge.innerText = "Kombinasi 4x";
+        workoutIntro.innerText = "Seimbangkan daya tahan kardiovaskular dan kekuatan massa otot tanpa cedera.";
+        workoutList.innerHTML = `
+          <li>• 2 hari latihan resistensi beban menyeluruh (Upper/Lower split).</li>
+          <li>• 2 hari latihan aerobik sedang (joging 30 menit, bersepeda, atau renang).</li>
+          <li>• Lakukan peregangan dinamis dan mobilitas sendi panggul serta pergelangan kaki.</li>
+        `;
+        workoutTip.innerHTML = "<strong>Target Gerak:</strong> Jaga aktivitas harian non-olahraga dengan capaian minimal 7.000–9.000 langkah kaki per hari.";
+
+      } else {
+        // Overweight atau Obese
+        const isObese = cat === 'obese';
+        statusBadge.className = isObese
+          ? "px-4 py-1.5 rounded-full text-xs font-extrabold bg-rose-50 text-rose-800 border border-rose-200"
+          : "px-4 py-1.5 rounded-full text-xs font-extrabold bg-amber-50 text-amber-800 border border-amber-200";
+        statusBadge.innerText = isObese ? "Kategori: Obesitas" : "Kelebihan Berat Badan";
+
+        const deficit = isObese ? 500 : 350;
+        calorieModeTag.innerText = `Defisit Terkontrol (-${deficit})`;
+        calorieModeTag.className = isObese
+          ? "font-bold text-xs px-2 py-0.5 rounded-md bg-rose-50 text-rose-800"
+          : "font-bold text-xs px-2 py-0.5 rounded-md bg-amber-50 text-amber-800";
+
+        const targetCal = Math.max(1200, tdee - deficit);
+        targetCalories.innerText = targetCal.toLocaleString('id-ID');
+        macroSummary.innerText = `P: ${Math.round(state.weight * 1.6)}g • K: ${Math.round((targetCal * 0.4) / 4)}g • L: ${Math.round((targetCal * 0.3) / 9)}g`;
+
+        programBanner.className = isObese
+          ? "p-4 rounded-2xl bg-rose-50 border border-rose-200 flex items-start gap-3.5"
+          : "p-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-start gap-3.5";
+        programIcon.innerText = "▼";
+        programIcon.className = isObese
+          ? "w-9 h-9 rounded-xl bg-white border border-rose-200 text-rose-700 flex items-center justify-center shrink-0 text-base font-bold"
+          : "w-9 h-9 rounded-xl bg-white border border-amber-200 text-amber-700 flex items-center justify-center shrink-0 text-base font-bold";
+        programTitle.innerText = "Fokus Program: Reduksi Lemak & Proteksi Sendi (Fat Loss)";
+        programDesc.innerText = "Terapkan defisit kalori terukur tanpa kelaparan ekstrem sembari menjaga massa otot lewat latihan beban dan asupan protein memadai.";
+
+        foodBadge.innerText = "Tinggi Serat & Protein";
+        foodIntro.innerText = "Maksimalkan volume makanan rendah kalori agar rasa kenyang bertahan lebih lama.";
+        foodList.innerHTML = `
+          <li>• Perbanyak sayuran hijau berserat tinggi di setiap jam makan untuk memperlambat laju cerna.</li>
+          <li>• Dahului konsumsi protein dan serat sebelum menyentuh porsi karbohidrat.</li>
+          <li>• Eliminasi minuman manis kemasan, boba, soda, dan kurangi saus dressing berlemak tinggi.</li>
+        `;
+        foodTip.innerHTML = "<strong>Trik Manajemen Lapar:</strong> Minum 2 gelas air putih 15 menit sebelum makan untuk membantu mengontrol porsi makan secara alami.";
+
+        workoutBadge.innerText = "Low Impact 4–5x";
+        workoutIntro.innerText = "Fokus pada pembakaran kalori yang aman bagi persendian lutut dan tulang belakang.";
+        workoutList.innerHTML = `
+          <li>• Berjalan kaki cepat (brisk walking) 40–50 menit setiap hari atau treadmill incline.</li>
+          <li>• Latihan kekuatan dengan dumbbell ringan atau resistance bands (12–15 repetisi terkontrol).</li>
+          <li>• Berenang atau sepeda statis untuk membakar kalori tanpa tekanan benturan sendi.</li>
+        `;
+        workoutTip.innerHTML = "<strong>Penting:</strong> Hindari lompat tali atau lari sprint mendadak sebelum berat badan mendekati rentang ideal untuk melindungi sendi lutut.";
+      }
+
+      // Pola Tidur & Pemulihan (Kategori Umum & Ritme Sirkadian)
+      sleepBadge.innerText = "7–8 Jam Optimal";
+      sleepIntro.innerText = "Kualitas tidur menentukan efektivitas hormon pembakar lemak (leptin) dan pengontrol nafsu makan (ghrelin).";
+      sleepList.innerHTML = `
+        <li>• Pertahankan jam tidur dan bangun yang sama setiap hari, termasuk di akhir pekan.</li>
+        <li>• Matikan layar gawai atau gunakan filter cahaya biru minimal 45 menit sebelum berbaring.</li>
+        <li>• Hentikan asupan kafein (kopi, teh, pre-workout) sekurang-kurangnya 7 jam sebelum jam tidur malam.</li>
+      `;
+      sleepTip.innerHTML = "<strong>Kondisi Kamar:</strong> Suhu kamar yang sejuk (20–23°C) dan suasana gelap total memicu pelepasan melatonin optimal untuk regenerasi jaringan.";
+    }
+
+    // Inisialisasi awal saat dimuat
+    recalculate();
+  </script>
+</body>
+</html>
